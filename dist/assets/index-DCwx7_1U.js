@@ -1790,38 +1790,86 @@ const outputText = document.getElementById("output-text");
 const previewImg = document.getElementById("preview-img");
 const placeholderText = document.getElementById("placeholder-text");
 const statusMsg = document.getElementById("status-msg");
+const copyBtn = document.getElementById("copy-btn");
+const clearBtn = document.getElementById("clear-btn");
+const loadingIndicator = document.getElementById("loading-indicator");
 let worker = null;
-async function initWorker() {
-  statusMsg.innerText = "Initializing OCR Engine...";
-  worker = await src.createWorker("eng");
-  statusMsg.innerText = "Ready to scan";
+function setLoading(isLoading, message = "Processing...") {
+  if (isLoading) {
+    loadingIndicator.classList.remove("hidden");
+    loadingIndicator.querySelector("p").innerText = message;
+    scanBtn.disabled = true;
+  } else {
+    loadingIndicator.classList.add("hidden");
+    scanBtn.disabled = false;
+  }
 }
+function showToast(message, duration = 3e3) {
+  statusMsg.innerText = message;
+  setTimeout(() => {
+    if (statusMsg.innerText === message) {
+      statusMsg.innerText = "Ready to scan";
+    }
+  }, duration);
+}
+async function initWorker() {
+  if (!worker) {
+    setLoading(true, "Initializing OCR Engine...");
+    try {
+      worker = await src.createWorker("eng");
+      setLoading(false);
+      showToast("OCR Engine Ready");
+    } catch (err) {
+      console.error("Worker Init Failed", err);
+      setLoading(false);
+      showToast("Error initializing OCR");
+    }
+  }
+}
+initWorker();
 async function handleScan() {
   try {
     const image = await Camera.getPhoto({
       quality: 90,
       allowEditing: true,
       // Native Android cropper
-      resultType: CameraResultType.Uri
+      resultType: CameraResultType.Uri,
+      source: "CAMERA"
+      // Force camera, not photos
     });
+    if (!image.webPath) return;
     previewImg.src = image.webPath;
     previewImg.style.display = "block";
     placeholderText.style.display = "none";
     if (!worker) await initWorker();
-    statusMsg.innerText = "Extracting text... (This runs locally)";
-    scanBtn.disabled = true;
-    outputText.value = "Processing...";
+    setLoading(true, "Extracting text...");
+    outputText.value = "";
     const {
       data: { text }
     } = await worker.recognize(image.webPath);
     outputText.value = text;
-    statusMsg.innerText = "Done!";
+    setLoading(false);
+    showToast("Extraction Complete!");
   } catch (error) {
     console.error("Scan failed", error);
-    statusMsg.innerText = "Error: " + error.message;
-  } finally {
-    scanBtn.disabled = false;
+    setLoading(false);
+    showToast(error.message || "Scan canceled or failed");
   }
 }
 scanBtn.addEventListener("click", handleScan);
-initWorker();
+copyBtn.addEventListener("click", async () => {
+  if (!outputText.value) return;
+  try {
+    await navigator.clipboard.writeText(outputText.value);
+    showToast("Text copied to clipboard!");
+  } catch (err) {
+    showToast("Failed to copy");
+  }
+});
+clearBtn.addEventListener("click", () => {
+  outputText.value = "";
+  previewImg.src = "";
+  previewImg.style.display = "none";
+  placeholderText.style.display = "block";
+  showToast("Cleared");
+});
