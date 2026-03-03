@@ -1,41 +1,51 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Privacy Scanner</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div class="app-container">
-      <header>
-        <h1>Secure OCR</h1>
-        <p>Offline & Private</p>
-      </header>
 
-      <main>
-        <div id="image-container" class="placeholder">
-          <img id="preview-img" alt="Scan Preview" style="display: none" />
-          <span id="placeholder-text">No document scanned</span>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Scanner</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
 
-        <div class="output-container">
+<body>
+  <div class="app-container">
+    <header>
+      <h1>Secure OCR</h1>
+      <p>Offline & Private</p>
+    </header>
+
+    <main>
+      <div id="image-container" class="placeholder">
+        <img id="preview-img" alt="Scan Preview" style="display: none" />
+        <span id="placeholder-text">No document scanned</span>
+      </div>
+
+      <div class="output-container">
+        <div class="output-header">
           <label>Extracted Text:</label>
-          <textarea
-            id="output-text"
-            readonly
-            placeholder="Text will appear here..."
-          ></textarea>
+          <div class="output-actions">
+            <button id="copy-btn" class="icon-btn" aria-label="Copy text">📋</button>
+            <button id="clear-btn" class="icon-btn" aria-label="Clear text">❌</button>
+          </div>
         </div>
+        <textarea id="output-text" readonly placeholder="Text will appear here..."></textarea>
+      </div>
 
-        <p id="status-msg">Ready to scan</p>
-      </main>
+      <div id="loading-indicator" class="hidden">
+        <div class="spinner"></div>
+        <p>Processing...</p>
+      </div>
 
-      <footer>
-        <button id="scan-btn">📷 Scan Document</button>
-      </footer>
-    </div>
+      <p id="status-msg">Ready to scan</p>
+    </main>
 
-    <script type="module" src="main.js"></script>
-  </body>
+    <footer>
+      <button id="scan-btn">📷 Scan Document</button>
+    </footer>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+
 </html>

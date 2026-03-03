@@ -7,15 +7,52 @@ const outputText = document.getElementById("output-text");
 const previewImg = document.getElementById("preview-img");
 const placeholderText = document.getElementById("placeholder-text");
 const statusMsg = document.getElementById("status-msg");
+const copyBtn = document.getElementById("copy-btn");
+const clearBtn = document.getElementById("clear-btn");
+const loadingIndicator = document.getElementById("loading-indicator");
 
 let worker = null;
 
-// Initialize OCR Worker (Loads specific language model)
-async function initWorker() {
-  statusMsg.innerText = "Initializing OCR Engine...";
-  worker = await createWorker("eng");
-  statusMsg.innerText = "Ready to scan";
+// Helper: Show/Hide Loading
+function setLoading(isLoading, message = "Processing...") {
+  if (isLoading) {
+    loadingIndicator.classList.remove("hidden");
+    loadingIndicator.querySelector("p").innerText = message;
+    scanBtn.disabled = true;
+  } else {
+    loadingIndicator.classList.add("hidden");
+    scanBtn.disabled = false;
+  }
 }
+
+// Helper: Toast Notification
+function showToast(message, duration = 3000) {
+  statusMsg.innerText = message;
+  setTimeout(() => {
+    if (statusMsg.innerText === message) {
+      statusMsg.innerText = "Ready to scan";
+    }
+  }, duration);
+}
+
+// Initialize OCR Worker
+async function initWorker() {
+  if (!worker) {
+    setLoading(true, "Initializing OCR Engine...");
+    try {
+      worker = await createWorker("eng");
+      setLoading(false);
+      showToast("OCR Engine Ready");
+    } catch (err) {
+      console.error("Worker Init Failed", err);
+      setLoading(false);
+      showToast("Error initializing OCR");
+    }
+  }
+}
+
+// Pre-load worker on app start
+initWorker();
 
 // Main Scan Function
 async function handleScan() {
@@ -25,7 +62,10 @@ async function handleScan() {
       quality: 90,
       allowEditing: true, // Native Android cropper
       resultType: CameraResultType.Uri,
+      source: "CAMERA", // Force camera, not photos
     });
+
+    if (!image.webPath) return;
 
     // 2. Update UI with Image
     previewImg.src = image.webPath;
@@ -35,9 +75,8 @@ async function handleScan() {
     // 3. Start OCR
     if (!worker) await initWorker();
 
-    statusMsg.innerText = "Extracting text... (This runs locally)";
-    scanBtn.disabled = true;
-    outputText.value = "Processing...";
+    setLoading(true, "Extracting text...");
+    outputText.value = ""; // Clear previous
 
     const {
       data: { text },
@@ -45,17 +84,32 @@ async function handleScan() {
 
     // 4. Final Result
     outputText.value = text;
-    statusMsg.innerText = "Done!";
+    setLoading(false);
+    showToast("Extraction Complete!");
   } catch (error) {
     console.error("Scan failed", error);
-    statusMsg.innerText = "Error: " + error.message;
-  } finally {
-    scanBtn.disabled = false;
+    setLoading(false);
+    showToast(error.message || "Scan canceled or failed");
   }
 }
 
-// Bind Button
+// UI Actions
 scanBtn.addEventListener("click", handleScan);
 
-// Pre-load worker on app start for speed
-initWorker();
+copyBtn.addEventListener("click", async () => {
+  if (!outputText.value) return;
+  try {
+    await navigator.clipboard.writeText(outputText.value);
+    showToast("Text copied to clipboard!");
+  } catch (err) {
+    showToast("Failed to copy");
+  }
+});
+
+clearBtn.addEventListener("click", () => {
+  outputText.value = "";
+  previewImg.src = "";
+  previewImg.style.display = "none";
+  placeholderText.style.display = "block";
+  showToast("Cleared");
+});

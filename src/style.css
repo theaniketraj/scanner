@@ -72,22 +72,57 @@ main {
   flex: 1;
   display: flex;
   flex-direction: column;
+  background-color: var(--surface);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.output-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.icon-btn {
+  background: transparent;
+  width: auto;
+  padding: 0.5rem;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  box-shadow: none;
+  min-width: 44px; /* Touch target size */
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 textarea {
   flex: 1;
-  background-color: var(--surface);
+  background-color: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   color: var(--text);
-  padding: 1rem;
-  margin-top: 0.5rem;
+  padding: 0;
+  margin-top: 0;
   resize: none;
   font-size: 1rem;
+  font-family: inherit;
 }
 
 textarea:focus {
-  outline: 2px solid var(--primary);
+  outline: none;
 }
 
 #status-msg {
@@ -95,6 +130,41 @@ textarea:focus {
   font-size: 0.9rem;
   color: var(--text-secondary);
   height: 20px;
+  margin-bottom: 0.5rem;
+}
+
+/* Loading Spinner */
+#loading-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary);
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Scan Button */
@@ -109,6 +179,9 @@ button {
   font-weight: bold;
   box-shadow: 0 4px 10px rgba(98, 0, 238, 0.3);
   cursor: pointer;
+  transition: transform 0.1s, background-color 0.2s;
+  /* Touch target safety */
+  min-height: 56px; 
 }
 
 button:active {
@@ -117,4 +190,5 @@ button:active {
 button:disabled {
   background-color: #333;
   color: #777;
+  box-shadow: none;
 }
